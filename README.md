@@ -9,7 +9,7 @@ Query the app store's knowledge of the current user's age bracket.
 - **iOS** — Apple [`DeclaredAgeRange`](https://developer.apple.com/documentation/declaredagerange/) (StoreKit, iOS 17.4+)
 - **Android** — [Google Play Age Signals](https://developer.android.com/google/play/age-signals/overview) (`com.google.android.play:age-signals`)
 
-Motivated by the Texas App Store Accountability Act, which requires apps to query platform age signal APIs to determine whether a user is a child.
+ Based on the Texas App Store Accountability Act, which requires apps to query platform age signal APIs to determine whether a user is a child.
 
 ---
 
