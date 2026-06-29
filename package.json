@@ -1,7 +1,7 @@
 {
   "name": "react-native-age-signals",
   "version": "0.1.0",
-  "description": "My new module",
+  "description": "Apple Declared Age Range and Google Play Age Signals for React Native / Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
@@ -16,16 +16,24 @@
   "keywords": [
     "react-native",
     "expo",
-    "react-native-age-signals",
-    "ReactNativeAgeSignals"
+    "age-signals",
+    "age-verification",
+    "declared-age",
+    "storekit",
+    "play-age-signals",
+    "texas-law",
+    "child-safety"
   ],
-  "repository": "",
-  "bugs": {
-    "url": "/issues"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shtefanilie/react-native-age-signals.git"
   },
-  "author": " <> ()",
+  "bugs": {
+    "url": "https://github.com/shtefanilie/react-native-age-signals/issues"
+  },
+  "author": "Stefan Ilie <stefanionut92@gmail.com> (https://stefanilie.com)",
   "license": "MIT",
-  "homepage": "#readme",
+  "homepage": "https://github.com/shtefanilie/react-native-age-signals#readme",
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.26.0",
