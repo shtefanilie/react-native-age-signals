@@ -1,4 +1,11 @@
-// Reexport the native module. On web, it will be resolved to ReactNativeAgeSignalsModule.web.ts
-// and on native platforms to ReactNativeAgeSignalsModule.ts
-export { default } from './ReactNativeAgeSignalsModule';
-export * from './ReactNativeAgeSignals.types';
+export { AgeRange, AgeSignalSource, AgeSignalResult } from './ReactNativeAgeSignals.types';
+
+import ReactNativeAgeSignalsModule from './ReactNativeAgeSignalsModule';
+
+export function getAgeRange() {
+  return ReactNativeAgeSignalsModule.getAgeRange();
+}
+
+export function isSupported() {
+  return ReactNativeAgeSignalsModule.isSupported();
+}
