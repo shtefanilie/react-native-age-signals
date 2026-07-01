@@ -54,7 +54,14 @@
     "preset": "jest-expo",
     "roots": [
       "<rootDir>/src"
-    ]
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*)"
+    ],
+    "moduleNameMapper": {
+      "^expo$": "<rootDir>/src/__mocks__/expo.ts",
+      "^expo/src/winter(.*)$": "<rootDir>/src/__mocks__/expo-winter.ts"
+    }
   },
   "platforms": {
     "ios": true,
