@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-
 import { getAgeRange, isSupported, AgeSignalResult } from 'react-native-age-signals';
 
 export default function App() {
