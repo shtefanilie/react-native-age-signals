@@ -56,6 +56,12 @@
       "<rootDir>/src"
     ]
   },
+  "platforms": {
+    "ios": true,
+    "android": true,
+    "web": false,
+    "expoGo": false
+  },
   "peerDependencies": {
     "expo": "*",
     "react": "*",
