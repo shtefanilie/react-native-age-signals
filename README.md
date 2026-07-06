@@ -36,12 +36,6 @@ cd ios && pod install
 
 No entitlements needed. `DeclaredAgeRange` is part of StoreKit.
 
-After install, run nitrogen to generate native bindings:
-
-```sh
-npx nitrogen
-```
-
 ### Android
 
 No extra setup required. Play Age Signals and manifest entries resolved via Gradle.
