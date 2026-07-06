@@ -3,4 +3,6 @@ plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'AgeSignalsExample'
 include ':app'
+include ':react-native-age-signals'
+project(':react-native-age-signals').projectDir = new File('../../android')
 includeBuild('../node_modules/@react-native/gradle-plugin')
