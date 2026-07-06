@@ -4,32 +4,47 @@
 [![npm](https://img.shields.io/npm/v/react-native-age-signals)](https://www.npmjs.com/package/react-native-age-signals)
 [![AI Slop Inside](https://sladge.net/badge.svg)](https://sladge.net)
 
-Query the app store's knowledge of the current user's age bracket.
+Query the app store's knowledge of the current user's age bracket. Built on [Nitro Modules](https://nitro.margelo.com) for near-zero JSI overhead.
 
 - **iOS** — Apple [`DeclaredAgeRange`](https://developer.apple.com/documentation/declaredagerange/) (StoreKit, iOS 17.4+)
 - **Android** — [Google Play Age Signals](https://developer.android.com/google/play/age-signals/overview) (`com.google.android.play:age-signals`)
 
- Based on the Texas App Store Accountability Act, which requires apps to query platform age signal APIs to determine whether a user is a child.
+Based on the Texas App Store Accountability Act, which requires apps to query platform age signal APIs to determine whether a user is a child.
+
+---
+
+## Requirements
+
+- React Native 0.75+
+- `react-native-nitro-modules` peer dependency
+- iOS 16.4+ (age signals only on 17.4+, older returns `unknown`)
+- Android API 23+ with Google Play Store
 
 ---
 
 ## Installation
 
 ```sh
-npm install react-native-age-signals
+npm install react-native-age-signals react-native-nitro-modules
 ```
 
 ### iOS
 
-No extra setup required. The `DeclaredAgeRange` API is part of StoreKit — no entitlements needed.
+```sh
+cd ios && pod install
+```
 
-Minimum iOS version: **16.4** (age signals only returned on **17.4+**, older devices return `unknown`).
+No entitlements needed. `DeclaredAgeRange` is part of StoreKit.
+
+After install, run nitrogen to generate native bindings:
+
+```sh
+npx nitrogen
+```
 
 ### Android
 
-No extra setup required. The Play Age Signals library and manifest entries are resolved automatically via Gradle.
-
-Minimum Android API level: **23**.
+No extra setup required. Play Age Signals and manifest entries resolved via Gradle.
 
 ---
 
