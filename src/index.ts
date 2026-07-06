@@ -1,6 +1,6 @@
-export { AgeRange, AgeSignalSource, AgeSignalResult } from './ReactNativeAgeSignals.types';
-
 import ReactNativeAgeSignalsModule from './ReactNativeAgeSignalsModule';
+
+export { AgeRange, AgeSignalSource, AgeSignalResult } from './ReactNativeAgeSignals.types';
 
 export function getAgeRange() {
   return ReactNativeAgeSignalsModule.getAgeRange();

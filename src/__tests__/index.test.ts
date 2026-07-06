@@ -1,11 +1,5 @@
-import { getAgeRange, isSupported } from '../index';
-
-jest.mock('../ReactNativeAgeSignalsModule', () => ({
-  getAgeRange: jest.fn(),
-  isSupported: jest.fn(),
-}));
-
 import ReactNativeAgeSignalsModule from '../ReactNativeAgeSignalsModule';
+import { getAgeRange, isSupported } from '../index';
 
 const mockModule = ReactNativeAgeSignalsModule as jest.Mocked<typeof ReactNativeAgeSignalsModule>;
 

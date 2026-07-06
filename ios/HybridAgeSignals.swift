@@ -1,20 +1,21 @@
-import ExpoModulesCore
+import Foundation
+import NitroModules
 import StoreKit
 
-public class ReactNativeAgeSignalsModule: Module {
-  public func definition() -> ModuleDefinition {
-    Name("ReactNativeAgeSignals")
-
-    AsyncFunction("isSupported") { () -> Bool in
+class HybridAgeSignals: HybridAgeSignalsSpec {
+  func isSupported() -> Promise<Bool> {
+    return Promise.async {
       if #available(iOS 17.4, *) {
         return true
       }
       return false
     }
+  }
 
-    AsyncFunction("getAgeRange") { () -> [String: String] in
+  func getAgeRange() -> Promise<AgeRangeResult> {
+    return Promise.async {
       guard #available(iOS 17.4, *) else {
-        return ["ageRange": "unknown", "source": "unavailable"]
+        return AgeRangeResult(ageRange: "unknown", source: "unavailable")
       }
 
       let range = await DeclaredAgeRange.current
@@ -31,7 +32,7 @@ public class ReactNativeAgeSignalsModule: Module {
         ageRange = "unknown"
       }
 
-      return ["ageRange": ageRange, "source": "apple"]
+      return AgeRangeResult(ageRange: ageRange, source: "apple")
     }
   }
 }
