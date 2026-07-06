@@ -3,7 +3,7 @@ import NitroModules
 import StoreKit
 
 class HybridAgeSignals: HybridAgeSignalsSpec {
-  func isSupported() -> Promise<Bool> {
+  func isSupported() throws -> Promise<Bool> {
     return Promise.async {
       if #available(iOS 17.4, *) {
         return true
@@ -12,7 +12,7 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
     }
   }
 
-  func getAgeRange() -> Promise<AgeRangeResult> {
+  func getAgeRange() throws -> Promise<AgeRangeResult> {
     return Promise.async {
       guard #available(iOS 17.4, *) else {
         return AgeRangeResult(ageRange: "unknown", source: "unavailable")
