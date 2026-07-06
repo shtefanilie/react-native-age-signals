@@ -20,6 +20,6 @@ Pod::Spec.new do |s|
 
   s.source_files = "**/*.{h,m,mm,swift,hpp,cpp}"
 
-  load 'nitrogen/generated/ios/ReactNativeAgeSignals+autolinking.rb'
+  load File.join(__dir__, '../nitrogen/generated/ios/ReactNativeAgeSignals+autolinking.rb')
   add_nitrogen_files(s)
 end
