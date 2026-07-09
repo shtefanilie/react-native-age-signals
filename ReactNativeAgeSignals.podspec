@@ -13,13 +13,15 @@ Pod::Spec.new do |s|
 
   s.dependency 'NitroModules'
 
+  s.weak_framework = 'DeclaredAgeRange'
+
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
     'SWIFT_VERSION' => '5.9',
   }
 
-  s.source_files = "**/*.{h,m,mm,swift,hpp,cpp}"
+  s.source_files = "ios/**/*.{h,m,mm,swift,hpp,cpp}"
 
-  load File.join(__dir__, '../nitrogen/generated/ios/ReactNativeAgeSignals+autolinking.rb')
+  load File.join(__dir__, 'nitrogen/generated/ios/ReactNativeAgeSignals+autolinking.rb')
   add_nitrogen_files(s)
 end

@@ -17,7 +17,7 @@ end
 target 'AgeSignalsExample' do
   config = use_native_modules!
 
-  pod 'ReactNativeAgeSignals', :path => '../../ios'
+  pod 'ReactNativeAgeSignals', :path => '../..'
 
   use_react_native!(
     :path => config[:reactNativePath],
