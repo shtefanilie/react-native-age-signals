@@ -16,17 +16,13 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.header}>react-native-age-signals</Text>
-        <View style={styles.group}>
+        <View style={styles.card}>
           <Row label="Supported" value={supported === null ? '…' : String(supported)} />
-          {result && (
-            <>
-              <Row label="Age range" value={result.ageRange} />
-              <Row label="Source" value={result.source} />
-            </>
-          )}
-          {error && <Text style={styles.error}>{error}</Text>}
+          <Row label="Age range" value={result?.ageRange ?? '…'} />
+          <Row label="Source" value={result?.source ?? '…'} />
+          {error != null && <Text style={styles.error}>{error}</Text>}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -43,11 +39,12 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#eee' },
-  header: { fontSize: 28, fontWeight: '600', margin: 20 },
-  group: { margin: 20, backgroundColor: '#fff', borderRadius: 10, padding: 20, gap: 12 },
+  container: { flex: 1, backgroundColor: '#f2f2f7' },
+  content: { padding: 20, gap: 20 },
+  header: { fontSize: 24, fontWeight: '700' },
+  card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, gap: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   label: { fontSize: 16, color: '#555' },
   value: { fontSize: 16, fontWeight: '500' },
-  error: { fontSize: 14, color: 'red' },
+  error: { fontSize: 14, color: '#c00' },
 });

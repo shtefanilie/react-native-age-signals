@@ -1,10 +1,11 @@
-import { NativeModule, requireNativeModule } from 'expo';
+import { NitroModules } from 'react-native-nitro-modules';
+import type { HybridObject } from 'react-native-nitro-modules';
 
-import { AgeSignalResult } from './ReactNativeAgeSignals.types';
+import type { AgeSignalResult } from './ReactNativeAgeSignals.types';
 
-declare class ReactNativeAgeSignalsModule extends NativeModule {
+interface AgeSignalsSpec extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
   getAgeRange(): Promise<AgeSignalResult>;
   isSupported(): Promise<boolean>;
 }
 
-export default requireNativeModule<ReactNativeAgeSignalsModule>('ReactNativeAgeSignals');
+export default NitroModules.createHybridObject<AgeSignalsSpec>('AgeSignals');

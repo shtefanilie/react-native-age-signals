@@ -1,22 +1,43 @@
 plugins {
   id 'com.android.library'
-  id 'expo-module-gradle-plugin'
+  id 'org.jetbrains.kotlin.android'
 }
 
-group = 'expo.modules.agesignals'
+apply from: '../nitrogen/generated/android/ReactNativeAgeSignals+autolinking.gradle'
+
+group = 'com.margelo.nitro.agesignals'
 version = '0.1.0'
 
 android {
-  namespace "expo.modules.agesignals"
+  namespace "com.margelo.nitro.agesignals"
+  compileSdk 34
+
   defaultConfig {
+    minSdk 24
     versionCode 1
     versionName "0.1.0"
+
+    externalNativeBuild {
+      cmake {
+        cppFlags '-std=c++17'
+        arguments '-DANDROID_STL=c++_shared'
+      }
+    }
   }
+
+  externalNativeBuild {
+    cmake {
+      path 'CMakeLists.txt'
+    }
+  }
+
   lintOptions {
     abortOnError false
   }
 }
 
 dependencies {
+  implementation 'com.margelo.nitro:react-native-nitro-modules:+'
   implementation 'com.google.android.play:age-signals:0.0.3'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 }
