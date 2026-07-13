@@ -4,6 +4,14 @@
   "description": "Apple Declared Age Range and Google Play Age Signals for React Native / Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "files": [
+    "build",
+    "ios",
+    "android",
+    "nitrogen/generated",
+    "ReactNativeAgeSignals.podspec",
+    "react-native.config.js"
+  ],
   "scripts": {
     "codegen": "npx nitrogen",
     "build": "node internal/module_scripts/build.js",
@@ -36,9 +44,7 @@
   "author": "Stefan Ilie <stefanionut92@gmail.com> (https://stefanilie.com)",
   "license": "MIT",
   "homepage": "https://github.com/shtefanilie/react-native-age-signals#readme",
-  "dependencies": {
-    "react-native-nitro-modules": "^0.36.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@types/jest": "^29.2.1",
