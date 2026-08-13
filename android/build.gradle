@@ -6,7 +6,7 @@ plugins {
 apply from: '../nitrogen/generated/android/ReactNativeAgeSignals+autolinking.gradle'
 
 group = 'com.margelo.nitro.agesignals'
-version = '0.3.0'
+version = '0.3.1'
 
 android {
   namespace "com.margelo.nitro.agesignals"
@@ -15,7 +15,7 @@ android {
   defaultConfig {
     minSdk 24
     versionCode 1
-    versionName "0.3.0"
+    versionName "0.3.1"
 
     externalNativeBuild {
       cmake {

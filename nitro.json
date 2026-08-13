@@ -10,14 +10,8 @@
   },
   "autolinking": {
     "AgeSignals": {
-      "ios": {
-        "language": "swift",
-        "implementationClassName": "HybridAgeSignals"
-      },
-      "android": {
-        "language": "kotlin",
-        "implementationClassName": "HybridAgeSignals"
-      }
+      "swift": "HybridAgeSignals",
+      "kotlin": "HybridAgeSignals"
     }
   },
   "ignorePaths": ["**/node_modules", "**/build", "**/example"]
