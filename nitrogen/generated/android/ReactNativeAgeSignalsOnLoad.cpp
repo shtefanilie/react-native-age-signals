@@ -16,6 +16,7 @@
 #include <NitroModules/HybridObjectRegistry.hpp>
 
 #include "JHybridAgeSignalsSpec.hpp"
+#include <NitroModules/DefaultConstructableObject.hpp>
 
 namespace margelo::nitro::agesignals {
 
@@ -29,7 +30,14 @@ int initialize(JavaVM* vm) {
     margelo::nitro::agesignals::JHybridAgeSignalsSpec::registerNatives();
 
     // Register Nitro Hybrid Objects
-    
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "AgeSignals",
+      []() -> std::shared_ptr<HybridObject> {
+        static DefaultConstructableObject<JHybridAgeSignalsSpec::javaobject> object("com/margelo/nitro/agesignals/HybridAgeSignals");
+        auto instance = object.create();
+        return instance->cthis()->shared();
+      }
+    );
   });
 }
 

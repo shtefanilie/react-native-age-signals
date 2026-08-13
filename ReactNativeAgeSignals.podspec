@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name           = 'ReactNativeAgeSignals'
-  s.version        = '0.3.0'
+  s.version        = '0.3.1'
   s.summary        = 'Apple Declared Age Range and Google Play Age Signals for React Native'
   s.description    = 'Nitro module wrapping Apple DeclaredAgeRange (StoreKit, iOS 26.0+) and Google Play Age Signals to query the app store\'s knowledge of the current user\'s age bracket.'
   s.author         = { 'Stefan Ilie' => 'stefanionut92@gmail.com' }
