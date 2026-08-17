@@ -7,6 +7,7 @@ import com.facebook.proguard.annotations.DoNotStrip
 import com.google.android.play.agesignals.AgeSignalsManagerFactory
 import com.google.android.play.agesignals.AgeSignalsRequest
 import com.google.android.play.agesignals.model.AgeSignalsVerificationStatus
+import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.Promise
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -18,7 +19,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class HybridAgeSignals : HybridAgeSignalsSpec() {
   override fun isSupported(): Promise<Boolean> {
     return Promise.async {
-      val context = appContext.reactContext
+      val context = NitroModules.applicationContext
         ?: return@async false
       return@async try {
         AgeSignalsManagerFactory.create(context)
@@ -31,7 +32,7 @@ class HybridAgeSignals : HybridAgeSignalsSpec() {
 
   override fun getAgeRange(): Promise<AgeRangeResult> {
     return Promise.async {
-      val context: Context = appContext.reactContext
+      val context: Context = NitroModules.applicationContext
         ?: return@async AgeRangeResult(ageRange = "unknown", source = "unavailable")
 
       val manager = try {

@@ -10,7 +10,7 @@ version = '0.3.1'
 
 android {
   namespace "com.margelo.nitro.agesignals"
-  compileSdk 34
+  compileSdk 36
 
   defaultConfig {
     minSdk 24
@@ -19,7 +19,7 @@ android {
 
     externalNativeBuild {
       cmake {
-        cppFlags '-std=c++17'
+        cppFlags '-std=c++20'
         arguments '-DANDROID_STL=c++_shared'
       }
     }
@@ -31,13 +31,24 @@ android {
     }
   }
 
+  buildFeatures {
+    // Required so CMake can resolve the fbjni / ReactAndroid /
+    // react-native-nitro-modules prefab packages that the nitrogen-generated
+    // autolinking.cmake declares via find_package.
+    prefab true
+  }
+
   lintOptions {
     abortOnError false
   }
 }
 
 dependencies {
-  implementation 'com.margelo.nitro:react-native-nitro-modules:+'
+  // Version is substituted by the React Native gradle plugin applied in the
+  // consuming app's root project. This mirrors react-native-nitro-modules'
+  // own declaration; a hard-pinned version here would fight RN's substitution.
+  implementation 'com.facebook.react:react-native:+'
+  implementation project(':react-native-nitro-modules')
   implementation 'com.google.android.play:age-signals:0.0.3'
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 }
