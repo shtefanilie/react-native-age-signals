@@ -20,7 +20,11 @@ android {
     externalNativeBuild {
       cmake {
         cppFlags '-std=c++20'
-        arguments '-DANDROID_STL=c++_shared'
+        // Flexible page sizes align the shared library's LOAD segments to
+        // 16 KB, which Android 15+ devices may use as their page size. Without
+        // it the library is not 16 KB compatible and drags every consuming app
+        // into page size compatibility mode.
+        arguments '-DANDROID_STL=c++_shared', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
       }
     }
   }
