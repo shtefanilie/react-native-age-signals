@@ -33,7 +33,7 @@ class HybridAgeSignals : HybridAgeSignalsSpec() {
       val context: Context = NitroModules.applicationContext
         ?: return@async AgeRangeResult(ageRange = "unknown", source = "unavailable")
 
-      val manager = try {
+      val manager = FakeAgeSignalsStore.manager ?: try {
         AgeSignalsManagerFactory.create(context)
       } catch (e: Exception) {
         return@async AgeRangeResult(ageRange = "unknown", source = "unavailable")

@@ -16,6 +16,7 @@
 #include <NitroModules/HybridObjectRegistry.hpp>
 
 #include "JHybridAgeSignalsSpec.hpp"
+#include "JHybridAgeSignalsTestingSpec.hpp"
 #include <NitroModules/DefaultConstructableObject.hpp>
 
 namespace margelo::nitro::agesignals {
@@ -34,6 +35,14 @@ struct JHybridAgeSignalsSpecImpl: public jni::JavaClass<JHybridAgeSignalsSpecImp
     return javaPart->getJHybridAgeSignalsSpec();
   }
 };
+struct JHybridAgeSignalsTestingSpecImpl: public jni::JavaClass<JHybridAgeSignalsTestingSpecImpl, JHybridAgeSignalsTestingSpec::JavaPart> {
+  static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/agesignals/HybridAgeSignalsTesting;";
+  static std::shared_ptr<JHybridAgeSignalsTestingSpec> create() {
+    static const auto constructorFn = javaClassStatic()->getConstructor<JHybridAgeSignalsTestingSpecImpl::javaobject()>();
+    jni::local_ref<JHybridAgeSignalsTestingSpec::JavaPart> javaPart = javaClassStatic()->newObject(constructorFn);
+    return javaPart->getJHybridAgeSignalsTestingSpec();
+  }
+};
 
 void registerAllNatives() {
   using namespace margelo::nitro;
@@ -41,12 +50,19 @@ void registerAllNatives() {
 
   // Register native JNI methods
   margelo::nitro::agesignals::JHybridAgeSignalsSpec::CxxPart::registerNatives();
+  margelo::nitro::agesignals::JHybridAgeSignalsTestingSpec::CxxPart::registerNatives();
 
   // Register Nitro Hybrid Objects
   HybridObjectRegistry::registerHybridObjectConstructor(
     "AgeSignals",
     []() -> std::shared_ptr<HybridObject> {
       return JHybridAgeSignalsSpecImpl::create();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "AgeSignalsTesting",
+    []() -> std::shared_ptr<HybridObject> {
+      return JHybridAgeSignalsTestingSpecImpl::create();
     }
   );
 }
