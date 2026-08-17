@@ -15,9 +15,11 @@ if linkage != nil
 end
 
 target 'AgeSignalsExample' do
+  # ReactNativeAgeSignals is picked up by use_native_modules! above, via the
+  # example/node_modules/react-native-age-signals symlink back to the repo root.
+  # Declaring it explicitly as well makes CocoaPods fail with "multiple
+  # dependencies with different sources".
   config = use_native_modules!
-
-  pod 'ReactNativeAgeSignals', :path => '../..'
 
   use_react_native!(
     :path => config[:reactNativePath],

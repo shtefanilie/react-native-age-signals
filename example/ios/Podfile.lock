@@ -1679,7 +1679,7 @@ PODS:
     - React-logger (= 0.79.0)
     - React-perflogger (= 0.79.0)
     - React-utils (= 0.79.0)
-  - ReactNativeAgeSignals (0.1.0):
+  - ReactNativeAgeSignals (0.3.1):
     - NitroModules
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
@@ -1757,7 +1757,7 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
-  - ReactNativeAgeSignals (from `../../ios`)
+  - ReactNativeAgeSignals (from `../node_modules/react-native-age-signals`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1907,7 +1907,7 @@ EXTERNAL SOURCES:
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
   ReactNativeAgeSignals:
-    :path: "../../ios"
+    :path: "../node_modules/react-native-age-signals"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -1982,10 +1982,10 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 7f5052913dd72a0e84ca95973f9f8bc97f2c5b95
   ReactCodegen: 16700ce5938fd79c1ff4c5b5735f10830f2e6bd3
   ReactCommon: 1257efa9d0b07517d8b79bb4055eaefac1204807
-  ReactNativeAgeSignals: 88fee6ca71cedf523f06fb4a65bafa07664c3dda
+  ReactNativeAgeSignals: d70d1298dff4a9391eddec646429d03f52e0aa40
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 9773f1327b258fa449988c2e42fbb7cbdf655d96
 
-PODFILE CHECKSUM: fbf14dd19bd43b18834f397cdc24a60616932f57
+PODFILE CHECKSUM: f8a3eb7987b23967454efca82c3052d13c9f4c57
 
 COCOAPODS: 1.16.2
