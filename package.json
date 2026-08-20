@@ -1,13 +1,25 @@
 {
   "name": "react-native-age-signals",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Apple Declared Age Range and Google Play Age Signals for React Native / Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./testing": {
+      "types": "./build/testing.d.ts",
+      "default": "./build/testing.js"
+    }
+  },
   "files": [
     "build",
     "ios",
-    "android",
+    "android/build.gradle",
+    "android/CMakeLists.txt",
+    "android/src/main",
     "nitrogen/generated",
     "ReactNativeAgeSignals.podspec",
     "react-native.config.js"
@@ -17,6 +29,8 @@
     "build": "node internal/module_scripts/build.js",
     "clean": "node internal/module_scripts/clean.js",
     "lint": "eslint src/",
+    "verify:registration": "node internal/module_scripts/verify-registration.js",
+    "verify:package-size": "node internal/module_scripts/verify-package-size.js",
     "test": "node internal/module_scripts/test.js",
     "prepare": "node internal/module_scripts/prepare.js",
     "open:ios": "node internal/module_scripts/open-ios.js",
@@ -44,7 +58,6 @@
   "author": "Stefan Ilie <stefanionut92@gmail.com> (https://stefanilie.com)",
   "license": "MIT",
   "homepage": "https://github.com/shtefanilie/react-native-age-signals#readme",
-  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@types/jest": "^29.2.1",
@@ -83,6 +96,6 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-nitro-modules": "*"
+    "react-native-nitro-modules": "^0.31.10"
   }
 }

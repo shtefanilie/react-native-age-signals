@@ -16,6 +16,7 @@
 #include <NitroModules/HybridObjectRegistry.hpp>
 
 #include "JHybridAgeSignalsSpec.hpp"
+#include "JHybridAgeSignalsTestingSpec.hpp"
 #include <NitroModules/DefaultConstructableObject.hpp>
 
 namespace margelo::nitro::agesignals {
@@ -28,12 +29,21 @@ int initialize(JavaVM* vm) {
   return facebook::jni::initialize(vm, [] {
     // Register native JNI methods
     margelo::nitro::agesignals::JHybridAgeSignalsSpec::registerNatives();
+    margelo::nitro::agesignals::JHybridAgeSignalsTestingSpec::registerNatives();
 
     // Register Nitro Hybrid Objects
     HybridObjectRegistry::registerHybridObjectConstructor(
       "AgeSignals",
       []() -> std::shared_ptr<HybridObject> {
         static DefaultConstructableObject<JHybridAgeSignalsSpec::javaobject> object("com/margelo/nitro/agesignals/HybridAgeSignals");
+        auto instance = object.create();
+        return instance->cthis()->shared();
+      }
+    );
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "AgeSignalsTesting",
+      []() -> std::shared_ptr<HybridObject> {
+        static DefaultConstructableObject<JHybridAgeSignalsTestingSpec::javaobject> object("com/margelo/nitro/agesignals/HybridAgeSignalsTesting");
         auto instance = object.create();
         return instance->cthis()->shared();
       }

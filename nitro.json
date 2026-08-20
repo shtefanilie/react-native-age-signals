@@ -12,6 +12,9 @@
     "AgeSignals": {
       "swift": "HybridAgeSignals",
       "kotlin": "HybridAgeSignals"
+    },
+    "AgeSignalsTesting": {
+      "kotlin": "HybridAgeSignalsTesting"
     }
   },
   "ignorePaths": ["**/node_modules", "**/build", "**/example"]

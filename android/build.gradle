@@ -5,22 +5,36 @@ plugins {
 
 apply from: '../nitrogen/generated/android/ReactNativeAgeSignals+autolinking.gradle'
 
+// Mirror the host app's ABI selection. Building an ABI the app does not build
+// means linking against prefabs (fbjni / ReactAndroid / NitroModules) that were
+// never produced for it, which fails with a wall of undefined nitro symbols
+// rather than a missing-file error.
+def reactNativeArchitectures() {
+  def value = rootProject.getProperties().get('reactNativeArchitectures')
+  return value ? value.split(',') : ['x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a']
+}
+
 group = 'com.margelo.nitro.agesignals'
-version = '0.3.1'
+version = '0.4.0'
 
 android {
   namespace "com.margelo.nitro.agesignals"
-  compileSdk 34
+  compileSdk 36
 
   defaultConfig {
     minSdk 24
     versionCode 1
-    versionName "0.3.1"
+    versionName "0.4.0"
 
     externalNativeBuild {
       cmake {
-        cppFlags '-std=c++17'
-        arguments '-DANDROID_STL=c++_shared'
+        cppFlags '-std=c++20'
+        // Flexible page sizes align the shared library's LOAD segments to
+        // 16 KB, which Android 15+ devices may use as their page size. Without
+        // it the library is not 16 KB compatible and drags every consuming app
+        // into page size compatibility mode.
+        arguments '-DANDROID_STL=c++_shared', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+        abiFilters(*reactNativeArchitectures())
       }
     }
   }
@@ -31,13 +45,24 @@ android {
     }
   }
 
+  buildFeatures {
+    // Required so CMake can resolve the fbjni / ReactAndroid /
+    // react-native-nitro-modules prefab packages that the nitrogen-generated
+    // autolinking.cmake declares via find_package.
+    prefab true
+  }
+
   lintOptions {
     abortOnError false
   }
 }
 
 dependencies {
-  implementation 'com.margelo.nitro:react-native-nitro-modules:+'
+  // Version is substituted by the React Native gradle plugin applied in the
+  // consuming app's root project. This mirrors react-native-nitro-modules'
+  // own declaration; a hard-pinned version here would fight RN's substitution.
+  implementation 'com.facebook.react:react-native:+'
+  implementation project(':react-native-nitro-modules')
   implementation 'com.google.android.play:age-signals:0.0.3'
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 }

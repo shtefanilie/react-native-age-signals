@@ -1,11 +1,11 @@
-import ReactNativeAgeSignalsModule from './ReactNativeAgeSignalsModule';
+import { requireNativeModule } from './ReactNativeAgeSignalsModule';
 
 export { AgeRange, AgeSignalSource, AgeSignalResult } from './ReactNativeAgeSignals.types';
 
 export function getAgeRange() {
-  return ReactNativeAgeSignalsModule.getAgeRange();
+  return requireNativeModule().getAgeRange();
 }
 
 export function isSupported() {
-  return ReactNativeAgeSignalsModule.isSupported();
+  return requireNativeModule().isSupported();
 }

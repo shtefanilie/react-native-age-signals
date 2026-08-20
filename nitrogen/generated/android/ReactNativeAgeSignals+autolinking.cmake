@@ -34,8 +34,10 @@ target_sources(
   ../nitrogen/generated/android/ReactNativeAgeSignalsOnLoad.cpp
   # Shared Nitrogen C++ sources
   ../nitrogen/generated/shared/c++/HybridAgeSignalsSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridAgeSignalsTestingSpec.cpp
   # Android-specific Nitrogen C++ sources
   ../nitrogen/generated/android/c++/JHybridAgeSignalsSpec.cpp
+  ../nitrogen/generated/android/c++/JHybridAgeSignalsTestingSpec.cpp
 )
 
 # From node_modules/react-native/ReactAndroid/cmake-utils/folly-flags.cmake
