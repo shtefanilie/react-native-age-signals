@@ -4,8 +4,18 @@ import NitroModules
 import DeclaredAgeRange
 #endif
 import UIKit
+import os
 
 class HybridAgeSignals: HybridAgeSignalsSpec {
+  /// Logs to the unified log under the "react-native-age-signals" subsystem, so
+  /// a failure can be read with
+  /// `log stream --predicate 'subsystem == "react-native-age-signals"'`.
+  ///
+  /// The result type deliberately carries no error detail — `source` says only
+  /// whether the outcome is worth retrying — so this log is the only place the
+  /// underlying reason is recoverable.
+  private static let logger = Logger(subsystem: "react-native-age-signals", category: "AgeSignals")
+
   func isSupported() throws -> Promise<Bool> {
     return Promise.async {
       #if canImport(DeclaredAgeRange)
@@ -33,6 +43,9 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
   private func fetchAgeRange() async -> AgeRangeResult {
     do {
       guard let viewController = await MainActor.run(body: { Self.rootViewController() }) else {
+        Self.logger.warning(
+          "Found no root view controller to present the age range sheet from. Reporting unavailable."
+        )
         return AgeRangeResult(ageRange: "unknown", source: "unavailable")
       }
 
@@ -47,9 +60,51 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
       case .declinedSharing:
         return AgeRangeResult(ageRange: "unknown", source: "declined")
       @unknown default:
+        Self.logger.warning("AgeRangeService returned an unrecognised response. Reporting unavailable.")
         return AgeRangeResult(ageRange: "unknown", source: "unavailable")
       }
+    } catch let error as AgeRangeService.Error {
+      return Self.result(for: error)
     } catch {
+      // Cancellation and anything Apple adds later land here. Nothing proves the
+      // failure is permanent, so report it as retryable.
+      Self.logger.error(
+        "requestAgeRange failed with an unrecognised error: \(String(describing: error), privacy: .public). Reporting a retryable error."
+      )
+      return AgeRangeResult(ageRange: "unknown", source: "error")
+    }
+  }
+
+  /// Maps an `AgeRangeService.Error` onto `source`, which is what tells a caller
+  /// whether retrying is worthwhile.
+  ///
+  /// The distinction matters because a consumer typically caches the outcome, and
+  /// caching a transient failure makes it permanent. `unavailable` means "do not
+  /// ask this device again"; `error` means "ask again next launch".
+  ///
+  /// The same rule is applied to Play's error codes in
+  /// android/src/main/java/com/margelo/nitro/agesignals/HybridAgeSignals.kt.
+  /// Change both together.
+  @available(iOS 26.0, *)
+  private static func result(for error: AgeRangeService.Error) -> AgeRangeResult {
+    switch error {
+    case .notAvailable:
+      // The device or the signed-in Apple Account cannot supply a declared age
+      // range. Nothing the app does will change that within this install.
+      logger.warning("AgeRangeService reported notAvailable. Reporting unavailable.")
+      return AgeRangeResult(ageRange: "unknown", source: "unavailable")
+    case .invalidRequest:
+      // Our own call was malformed, e.g. the age gates we passed. Retrying will
+      // not fix it, but reporting it as unavailable would let a caller cache the
+      // bug out of sight, so keep it loud and retryable.
+      logger.error(
+        "AgeRangeService rejected the request as invalid. This is a bug in the age gates this module requests."
+      )
+      return AgeRangeResult(ageRange: "unknown", source: "error")
+    @unknown default:
+      logger.error(
+        "AgeRangeService reported an error case added after this module was written: \(String(describing: error), privacy: .public). Reporting a retryable error."
+      )
       return AgeRangeResult(ageRange: "unknown", source: "error")
     }
   }
