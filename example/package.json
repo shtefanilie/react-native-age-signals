@@ -13,7 +13,7 @@
     "react": "19.0.0",
     "react-native": "0.79.0",
     "react-native-age-signals": "file:..",
-    "react-native-nitro-modules": "^0.36.1"
+    "react-native-nitro-modules": "0.31.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

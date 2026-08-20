@@ -8,7 +8,7 @@ PODS:
   - hermes-engine (0.79.0):
     - hermes-engine/Pre-built (= 0.79.0)
   - hermes-engine/Pre-built (0.79.0)
-  - NitroModules (0.36.1):
+  - NitroModules (0.31.10):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1919,7 +1919,7 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: cd4bd90f051e3658c83cc00e87c603dfe1b75947
-  NitroModules: 3a8f83643507fed219f86e25d588a5d5c74cc3d9
+  NitroModules: 0af9a8516f3d8f101976d60e1f34e2a22f401600
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: c147f8912f768e5eedbc5f115b2b223d007d9fe3
   RCTRequired: a71a7e9efd6546704d5abc683e0b68fcaa759861
@@ -1982,7 +1982,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 7f5052913dd72a0e84ca95973f9f8bc97f2c5b95
   ReactCodegen: 16700ce5938fd79c1ff4c5b5735f10830f2e6bd3
   ReactCommon: 1257efa9d0b07517d8b79bb4055eaefac1204807
-  ReactNativeAgeSignals: ebc3bc3c78df72ca3becc53a424eb2b33e0931c9
+  ReactNativeAgeSignals: 83844bdae4816b73cb4dea873cfc6a6f8d10bb5a
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 9773f1327b258fa449988c2e42fbb7cbdf655d96
 
