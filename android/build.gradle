@@ -5,6 +5,15 @@ plugins {
 
 apply from: '../nitrogen/generated/android/ReactNativeAgeSignals+autolinking.gradle'
 
+// Mirror the host app's ABI selection. Building an ABI the app does not build
+// means linking against prefabs (fbjni / ReactAndroid / NitroModules) that were
+// never produced for it, which fails with a wall of undefined nitro symbols
+// rather than a missing-file error.
+def reactNativeArchitectures() {
+  def value = rootProject.getProperties().get('reactNativeArchitectures')
+  return value ? value.split(',') : ['x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a']
+}
+
 group = 'com.margelo.nitro.agesignals'
 version = '0.4.0'
 
@@ -25,6 +34,7 @@ android {
         // it the library is not 16 KB compatible and drags every consuming app
         // into page size compatibility mode.
         arguments '-DANDROID_STL=c++_shared', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+        abiFilters(*reactNativeArchitectures())
       }
     }
   }
