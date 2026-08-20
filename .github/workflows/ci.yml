@@ -42,3 +42,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+
+  # Guards two failure modes that produce a clean build and green tests, so
+  # nothing else in this pipeline would catch them: glue that registers no
+  # HybridObject, and a tarball bloated by build output caught in the `files`
+  # allowlist.
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify HybridObjects are registered in the generated glue
+        run: npm run verify:registration
+      - name: Verify the published tarball stays small
+        run: npm run verify:package-size

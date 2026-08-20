@@ -29,6 +29,8 @@
     "build": "node internal/module_scripts/build.js",
     "clean": "node internal/module_scripts/clean.js",
     "lint": "eslint src/",
+    "verify:registration": "node internal/module_scripts/verify-registration.js",
+    "verify:package-size": "node internal/module_scripts/verify-package-size.js",
     "test": "node internal/module_scripts/test.js",
     "prepare": "node internal/module_scripts/prepare.js",
     "open:ios": "node internal/module_scripts/open-ios.js",
