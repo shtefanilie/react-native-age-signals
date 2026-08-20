@@ -99,15 +99,33 @@ interface AgeSignalResult {
 | `adult` | 18+ |
 | `unknown` | No age signal available (user hasn't set age, OS too old, etc.) |
 
-| `source` | Meaning |
-|----------|---------|
-| `apple` | Result from Apple DeclaredAgeRange |
-| `google` | Result from Google Play Age Signals |
-| `unavailable` | API not available on this device/OS |
-| `declined` | User declined to share age range (iOS) |
-| `error` | Native API reported an error |
+| `source` | Meaning | Worth retrying? |
+|----------|---------|-----------------|
+| `apple` | Result from Apple DeclaredAgeRange | —, this is the answer |
+| `google` | Result from Google Play Age Signals | —, this is the answer |
+| `unavailable` | Neither this device, OS version, nor account can supply a signal | No |
+| `declined` | User declined to share their age range (iOS) | No — asking again is hostile |
+| `error` | The platform API failed this time | Yes |
 
-`getAgeRange()` resolves rather than rejecting when the underlying API fails: you get `{ ageRange: 'unknown', source: 'error' }` on both platforms.
+`getAgeRange()` resolves rather than rejecting when the underlying API fails, so you never need to wrap it in a `try/catch` for that case — a failure arrives as `{ ageRange: 'unknown', source: 'unavailable' }` or `{ ageRange: 'unknown', source: 'error' }`.
+
+**The difference between those two is the point.** Callers typically cache this result, and the split tells you whether caching is safe:
+
+- `unavailable` is terminal. Nothing the user or the app does will change it within this install, so cache it and stop asking.
+- `error` is transient — a network failure, a Play service that could not be bound, an API that was not ready. Do **not** cache it, or one bad moment becomes permanent. Ask again next launch.
+
+On Android the split comes from Play's own `AgeSignalsErrorCode`. Codes no user action can resolve (`API_NOT_AVAILABLE`, `PLAY_STORE_NOT_FOUND`, `APP_NOT_OWNED`, `SDK_VERSION_OUTDATED`) are `unavailable`. Everything else is `error`, including the "outdated" and "not found" codes, because a user who updates the Play Store or Play Services would then get a real signal.
+
+On iOS `AgeRangeService.Error.notAvailable` is `unavailable`; anything else, including cancellation, is `error`.
+
+The result carries no error detail beyond `source`. When you need the underlying reason, read the native log: iOS logs to the unified log under subsystem `react-native-age-signals`, Android to logcat under tag `AgeSignals`.
+
+```sh
+# iOS
+log stream --predicate 'subsystem == "react-native-age-signals"'
+# Android
+adb logcat -s AgeSignals
+```
 
 The buckets are derived from the age bounds the platform reports, using the same thresholds on iOS and Android. A user is `child` when their upper bound is 12 or below, `teen` when it is 17 or below, and `adult` when the upper bound is higher or the lower bound is 18 or above. When neither bound is usable the result is `unknown`.
 
@@ -115,8 +133,10 @@ The buckets are derived from the age bounds the platform reports, using the same
 
 Returns `true` if the age signals API is available on the current device.
 
-- iOS: requires iOS 26+
-- Android: requires Google Play Services
+- iOS: `true` on iOS 26+, `false` below it. Reliable, because availability is purely a matter of OS version.
+- Android: `true` whenever Play's client can be constructed, which is essentially any device where the class loads. **Treat this as a weak signal.** The Play SDK exposes no availability probe, so this cannot tell you whether a signal is actually obtainable.
+
+You do not need to call it before `getAgeRange()`. `getAgeRange()` performs its own check and reports `source: 'unavailable'` when the platform cannot answer, which on Android is derived from Play's real error code rather than guessed up front.
 
 ---
 
@@ -136,7 +156,10 @@ setFakeResult({ ageLower: 13, ageUpper: 17 });
 await getAgeRange(); // { ageRange: 'teen', source: 'google' }
 
 setFakeError(AgeSignalsErrorCode.PLAY_STORE_NOT_FOUND);
-await getAgeRange(); // { ageRange: 'unknown', source: 'error' }
+await getAgeRange(); // { ageRange: 'unknown', source: 'unavailable' } — terminal code
+
+setFakeError(AgeSignalsErrorCode.NETWORK_ERROR);
+await getAgeRange(); // { ageRange: 'unknown', source: 'error' } — transient code
 
 clearFake();         // back to the real Play client
 ```
@@ -144,7 +167,7 @@ clearFake();         // back to the real Play client
 | Function | Behaviour |
 |----------|-----------|
 | `setFakeResult({ ageLower?, ageUpper? })` | Answers the next reads from these bounds. Omit a bound to report it as absent, which is how Play represents an open-ended range. |
-| `setFakeError(errorCode)` | Fails the next reads with an `AgeSignalsErrorCode`, surfacing as `source: 'error'`. |
+| `setFakeError(errorCode)` | Fails the next reads with an `AgeSignalsErrorCode`. Surfaces as `source: 'unavailable'` for terminal codes and `source: 'error'` for transient ones — see the table above, and use this to exercise both caching paths. |
 | `clearFake()` | Removes the fake so reads go to the real Play client again. |
 
 A fake stays installed until you replace it or call `clearFake()`.
