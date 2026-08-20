@@ -21,15 +21,24 @@ Based on the Texas App Store Accountability Act, which requires apps to query pl
 
 ### Nitro-runtime compatibility
 
-The Nitro glue is version-coupled with the host app's `react-native-nitro-modules` runtime — the generated code must be built against the same nitro line the host installs. This release ships glue generated with `nitrogen` **0.36.1** (nitro line **0.36.x**).
+The Nitro glue is version-coupled with the host app's `react-native-nitro-modules` runtime — the generated code must be built against the same nitro line the host installs. This release ships glue generated with `nitrogen` **0.31.10** (nitro line **0.31.x**).
 
 | `react-native-age-signals` | Generated against nitro line |
 | --- | --- |
-| `0.4.0` | `0.36.x` (`nitrogen`/`react-native-nitro-modules` `0.36.1`) |
+| `0.4.0` | `0.31.x` (`nitrogen`/`react-native-nitro-modules` `0.31.10`) |
 | `0.3.0`–`0.3.1` | `0.31.x` (`nitrogen`/`react-native-nitro-modules` `0.31.10`) |
 | `0.1.0`–`0.2.1` | `0.36.x` |
 
 If your app is on a different nitro line, pin this library's `nitrogen` and `react-native-nitro-modules` devDependencies to your line and run `npm run codegen` to regenerate the glue before building.
+
+> **The `autolinking` block in `nitro.json` is schema-versioned too.** Nitro `0.31.x` expects flat
+> language keys (`{ "AgeSignals": { "swift": "HybridAgeSignals", "kotlin": "HybridAgeSignals" } }`),
+> whereas `0.36.x` expects nested per-platform objects (`{ "ios": { "language": "swift", ... } }`).
+> Zod ignores the unknown keys instead of erroring, so feeding the wrong shape to nitrogen silently
+> emits glue that registers **no** HybridObjects — the build succeeds and the app throws
+> "has not yet been registered in the HybridObjectRegistry" at runtime. After changing nitro lines,
+> always confirm `nitrogen/generated/ios/*Autolinking.mm` exists and that
+> `nitrogen/generated/android/*OnLoad.cpp` contains `registerHybridObjectConstructor` calls.
 
 ---
 
