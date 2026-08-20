@@ -56,3 +56,6 @@ yarn-error.log
 
 # Expo
 .expo/*
+
+# npm pack output
+*.tgz
