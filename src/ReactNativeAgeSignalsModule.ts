@@ -9,6 +9,7 @@ interface AgeSignalsSpec extends HybridObject<{ ios: 'swift'; android: 'kotlin' 
 }
 
 let nativeModule: AgeSignalsSpec | undefined;
+let hasWarnedAboutFailure = false;
 
 /**
  * Resolves the native AgeSignals object, constructing it on first use.
@@ -28,7 +29,34 @@ let nativeModule: AgeSignalsSpec | undefined;
  * Mirrors `requireNativeTestingModule` in ./testing.
  */
 export function requireNativeModule(): AgeSignalsSpec {
-  nativeModule ??= NitroModules.createHybridObject<AgeSignalsSpec>('AgeSignals');
+  if (nativeModule) {
+    return nativeModule;
+  }
+
+  try {
+    nativeModule = NitroModules.createHybridObject<AgeSignalsSpec>('AgeSignals');
+  } catch (error) {
+    // Deferring construction means a broken native build no longer crashes at
+    // boot, so without this the only symptom is every result quietly becoming
+    // `source: 'error'` — which is indistinguishable from the platform simply
+    // having no age signal to give. Warn so the build problem stays visible.
+    //
+    // Warned once rather than per call: the failure is not transient (the
+    // HybridObject is registered at startup or never), so repeating it would
+    // only bury the first occurrence.
+    if (!hasWarnedAboutFailure) {
+      hasWarnedAboutFailure = true;
+      console.warn(
+        '[react-native-age-signals] Could not create the native "AgeSignals" HybridObject. ' +
+          'Age signals will be unavailable for the rest of this session. This usually means the ' +
+          'native side was not registered — rebuild the app (and on iOS re-run pod install) after ' +
+          'installing or upgrading this package.',
+        error
+      );
+    }
+
+    throw error;
+  }
 
   return nativeModule;
 }

@@ -26,6 +26,14 @@ beforeEach(() => {
   jest.resetModules();
 });
 
+afterEach(() => {
+  // `console.warn` is spied on in the construction-failure tests. Without this
+  // the spy outlives the test that installed it and its call history bleeds
+  // into the next one, since resetting the module registry does not touch spies
+  // installed on globals.
+  jest.restoreAllMocks();
+});
+
 describe('getAgeRange', () => {
   it('returns child result from Apple', async () => {
     const { index, nativeModule } = loadModule();
@@ -122,10 +130,40 @@ describe('native object construction', () => {
     (NitroModules.createHybridObject as jest.Mock).mockImplementation(() => {
       throw new Error('HybridObject "AgeSignals" has not yet been registered');
     });
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Importing must not throw, even though construction will.
     const index = require('../index') as typeof import('../index');
 
     expect(() => index.isSupported()).toThrow('has not yet been registered');
+  });
+
+  it('warns once about a registration failure, however many calls are made', () => {
+    const { NitroModules } = require('react-native-nitro-modules');
+    (NitroModules.createHybridObject as jest.Mock).mockImplementation(() => {
+      throw new Error('HybridObject "AgeSignals" has not yet been registered');
+    });
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const index = require('../index') as typeof import('../index');
+
+    expect(() => index.isSupported()).toThrow();
+    expect(() => index.getAgeRange()).toThrow();
+    expect(() => index.isSupported()).toThrow();
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain(
+      'Could not create the native "AgeSignals" HybridObject'
+    );
+  });
+
+  it('does not warn when construction succeeds', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const { index, nativeModule } = loadModule();
+    nativeModule.isSupported.mockResolvedValue(true);
+
+    await index.isSupported();
+
+    expect(warn).not.toHaveBeenCalled();
   });
 });
