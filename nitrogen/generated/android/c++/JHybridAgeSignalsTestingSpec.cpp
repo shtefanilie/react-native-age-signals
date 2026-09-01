@@ -51,6 +51,14 @@ namespace margelo::nitro::agesignals {
     static const auto method = javaClassStatic()->getMethod<void(double /* errorCode */)>("setFakeError");
     method(_javaPart, errorCode);
   }
+  void JHybridAgeSignalsTestingSpec::setFakeAccessStatus(double status) {
+    static const auto method = javaClassStatic()->getMethod<void(double /* status */)>("setFakeAccessStatus");
+    method(_javaPart, status);
+  }
+  void JHybridAgeSignalsTestingSpec::setFakeAccessError(double errorCode) {
+    static const auto method = javaClassStatic()->getMethod<void(double /* errorCode */)>("setFakeAccessError");
+    method(_javaPart, errorCode);
+  }
   void JHybridAgeSignalsTestingSpec::clearFake() {
     static const auto method = javaClassStatic()->getMethod<void()>("clearFake");
     method(_javaPart);

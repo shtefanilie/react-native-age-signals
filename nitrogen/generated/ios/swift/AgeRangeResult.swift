@@ -19,8 +19,14 @@ public extension AgeRangeResult {
   /**
    * Create a new instance of `AgeRangeResult`.
    */
-  init(ageRange: String, source: String) {
-    self.init(std.string(ageRange), std.string(source))
+  init(ageRange: String, source: String, accessStatus: String?) {
+    self.init(std.string(ageRange), std.string(source), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = accessStatus {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }())
   }
 
   var ageRange: String {
@@ -42,6 +48,30 @@ public extension AgeRangeResult {
     @inline(__always)
     set {
       self.__source = std.string(newValue)
+    }
+  }
+  
+  var accessStatus: String? {
+    @inline(__always)
+    get {
+      return { () -> String? in
+        if bridge.has_value_std__optional_std__string_(self.__accessStatus) {
+          let __unwrapped = bridge.get_std__optional_std__string_(self.__accessStatus)
+          return String(__unwrapped)
+        } else {
+          return nil
+        }
+      }()
+    }
+    @inline(__always)
+    set {
+      self.__accessStatus = { () -> bridge.std__optional_std__string_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+        } else {
+          return .init()
+        }
+      }()
     }
   }
 }

@@ -10,6 +10,7 @@
 #include <fbjni/fbjni.h>
 #include "AgeRangeResult.hpp"
 
+#include <optional>
 #include <string>
 
 namespace margelo::nitro::agesignals {
@@ -35,9 +36,12 @@ namespace margelo::nitro::agesignals {
       jni::local_ref<jni::JString> ageRange = this->getFieldValue(fieldAgeRange);
       static const auto fieldSource = clazz->getField<jni::JString>("source");
       jni::local_ref<jni::JString> source = this->getFieldValue(fieldSource);
+      static const auto fieldAccessStatus = clazz->getField<jni::JString>("accessStatus");
+      jni::local_ref<jni::JString> accessStatus = this->getFieldValue(fieldAccessStatus);
       return AgeRangeResult(
         ageRange->toStdString(),
-        source->toStdString()
+        source->toStdString(),
+        accessStatus != nullptr ? std::make_optional(accessStatus->toStdString()) : std::nullopt
       );
     }
 
@@ -47,13 +51,14 @@ namespace margelo::nitro::agesignals {
      */
     [[maybe_unused]]
     static jni::local_ref<JAgeRangeResult::javaobject> fromCpp(const AgeRangeResult& value) {
-      using JSignature = JAgeRangeResult(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
+      using JSignature = JAgeRangeResult(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         jni::make_jstring(value.ageRange),
-        jni::make_jstring(value.source)
+        jni::make_jstring(value.source),
+        value.accessStatus.has_value() ? jni::make_jstring(value.accessStatus.value()) : nullptr
       );
     }
   };

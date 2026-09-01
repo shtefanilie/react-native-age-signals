@@ -16,6 +16,8 @@ namespace margelo::nitro::agesignals {
     registerHybrids(this, [](Prototype& prototype) {
       prototype.registerHybridMethod("setFakeResult", &HybridAgeSignalsTestingSpec::setFakeResult);
       prototype.registerHybridMethod("setFakeError", &HybridAgeSignalsTestingSpec::setFakeError);
+      prototype.registerHybridMethod("setFakeAccessStatus", &HybridAgeSignalsTestingSpec::setFakeAccessStatus);
+      prototype.registerHybridMethod("setFakeAccessError", &HybridAgeSignalsTestingSpec::setFakeAccessError);
       prototype.registerHybridMethod("clearFake", &HybridAgeSignalsTestingSpec::clearFake);
     });
   }

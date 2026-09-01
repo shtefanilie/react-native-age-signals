@@ -50,6 +50,8 @@ namespace margelo::nitro::agesignals {
       // Methods
       virtual void setFakeResult(std::optional<double> ageLower, std::optional<double> ageUpper) = 0;
       virtual void setFakeError(double errorCode) = 0;
+      virtual void setFakeAccessStatus(double status) = 0;
+      virtual void setFakeAccessError(double errorCode) = 0;
       virtual void clearFake() = 0;
 
     protected:

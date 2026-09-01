@@ -118,9 +118,16 @@ open class HybridAgeSignalsSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func getAgeRange() -> bridge.Result_std__shared_ptr_Promise_AgeRangeResult___ {
+  public final func getAgeRange(requestAccess: bridge.std__optional_bool_) -> bridge.Result_std__shared_ptr_Promise_AgeRangeResult___ {
     do {
-      let __result = try self.__implementation.getAgeRange()
+      let __result = try self.__implementation.getAgeRange(requestAccess: { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(requestAccess) {
+          let __unwrapped = bridge.get_std__optional_bool_(requestAccess)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }())
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_AgeRangeResult__ in
         let __promise = bridge.create_std__shared_ptr_Promise_AgeRangeResult__()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_AgeRangeResult__(__promise)

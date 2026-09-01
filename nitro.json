@@ -13,6 +13,9 @@
       "swift": "HybridAgeSignals",
       "kotlin": "HybridAgeSignals"
     },
+    "AgeSignalsAccess": {
+      "kotlin": "HybridAgeSignalsAccess"
+    },
     "AgeSignalsTesting": {
       "kotlin": "HybridAgeSignalsTesting"
     }

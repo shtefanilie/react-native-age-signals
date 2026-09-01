@@ -22,7 +22,10 @@ data class AgeRangeResult(
   val ageRange: String,
   @DoNotStrip
   @Keep
-  val source: String
+  val source: String,
+  @DoNotStrip
+  @Keep
+  val accessStatus: String?
 ) {
   /* primary constructor */
 
@@ -34,8 +37,8 @@ data class AgeRangeResult(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ageRange: String, source: String): AgeRangeResult {
-      return AgeRangeResult(ageRange, source)
+    private fun fromCpp(ageRange: String, source: String, accessStatus: String?): AgeRangeResult {
+      return AgeRangeResult(ageRange, source, accessStatus)
     }
   }
 }
