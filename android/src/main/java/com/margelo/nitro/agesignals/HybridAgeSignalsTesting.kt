@@ -3,9 +3,9 @@ package com.margelo.nitro.agesignals
 import android.content.pm.ApplicationInfo
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import com.google.android.play.agesignals.AgeSignalsAccessResult
 import com.google.android.play.agesignals.AgeSignalsException
 import com.google.android.play.agesignals.AgeSignalsResult
-import com.google.android.play.agesignals.testing.FakeAgeSignalsManager
 import com.margelo.nitro.NitroModules
 
 /**
@@ -14,38 +14,54 @@ import com.margelo.nitro.NitroModules
  *
  * Every entry point refuses to run unless the host application is debuggable,
  * so a release build cannot have its age signals replaced by a fake.
+ *
+ * The read and the access request are staged separately, mirroring Play's own
+ * two-function split: `setFakeResult` / `setFakeError` drive `checkAgeSignals`,
+ * while `setFakeAccessStatus` / `setFakeAccessError` drive
+ * `requestAgeSignalsAccess`. Exercising `getAgeRange({ requestAccess: true })`
+ * end to end needs one of each, because Play only reports bounds once access
+ * reports `SHARED`.
+ *
+ * Staging is additive across the two pairs and mutually exclusive within each —
+ * see [FakeAgeSignalsStore].
  */
 @Keep
 @DoNotStrip
 class HybridAgeSignalsTesting : HybridAgeSignalsTestingSpec() {
   override fun setFakeResult(ageLower: Double?, ageUpper: Double?) {
-    val result = AgeSignalsResult.builder()
-      .setAgeLower(ageLower?.toInt())
-      .setAgeUpper(ageUpper?.toInt())
-      .build()
+    requireDebuggable()
 
-    // Assigning a result does not clear a previously assigned exception, and
-    // FakeAgeSignalsManager prefers the exception when both are present. Use a
-    // fresh fake so the caller gets the result they just asked for.
-    FakeAgeSignalsStore.manager = requireDebuggableFake().apply {
-      setNextAgeSignalsResult(result)
-    }
+    FakeAgeSignalsStore.stageResult(
+      AgeSignalsResult.builder()
+        .setAgeLower(ageLower?.toInt())
+        .setAgeUpper(ageUpper?.toInt())
+        .build()
+    )
   }
 
   override fun setFakeError(errorCode: Double) {
-    FakeAgeSignalsStore.manager = requireDebuggableFake().apply {
-      setNextAgeSignalsException(AgeSignalsException(errorCode.toInt()))
-    }
+    requireDebuggable()
+    FakeAgeSignalsStore.stageException(AgeSignalsException(errorCode.toInt()))
+  }
+
+  override fun setFakeAccessStatus(status: Double) {
+    requireDebuggable()
+
+    FakeAgeSignalsStore.stageAccessResult(
+      AgeSignalsAccessResult.builder()
+        .setAgeSignalsStatus(status.toInt())
+        .build()
+    )
+  }
+
+  override fun setFakeAccessError(errorCode: Double) {
+    requireDebuggable()
+    FakeAgeSignalsStore.stageAccessException(AgeSignalsException(errorCode.toInt()))
   }
 
   override fun clearFake() {
     requireDebuggable()
-    FakeAgeSignalsStore.manager = null
-  }
-
-  private fun requireDebuggableFake(): FakeAgeSignalsManager {
-    requireDebuggable()
-    return FakeAgeSignalsManager()
+    FakeAgeSignalsStore.clear()
   }
 
   private fun requireDebuggable() {
