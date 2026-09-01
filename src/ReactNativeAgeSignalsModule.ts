@@ -1,14 +1,23 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { HybridObject } from 'react-native-nitro-modules';
 
-import type { AgeSignalResult } from './ReactNativeAgeSignals.types';
+import type { AgeAccessStatus, AgeSignalResult } from './ReactNativeAgeSignals.types';
 
 interface AgeSignalsSpec extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
-  getAgeRange(): Promise<AgeSignalResult>;
+  getAgeRange(requestAccess?: boolean): Promise<AgeSignalResult>;
   isSupported(): Promise<boolean>;
 }
 
+/**
+ * The Android-only consent surface. Separate from {@link AgeSignalsSpec} because
+ * Apple has no equivalent step, so nitrogen emits no Swift for it.
+ */
+interface AgeSignalsAccessSpec extends HybridObject<{ android: 'kotlin' }> {
+  requestAgeSignalsAccess(): Promise<AgeAccessStatus>;
+}
+
 let nativeModule: AgeSignalsSpec | undefined;
+let nativeAccessModule: AgeSignalsAccessSpec | undefined;
 let hasWarnedAboutFailure = false;
 
 /**
@@ -59,4 +68,21 @@ export function requireNativeModule(): AgeSignalsSpec {
   }
 
   return nativeModule;
+}
+
+/**
+ * Resolves the native AgeSignalsAccess object, constructing it on first use.
+ *
+ * Memoized at module scope for the same reason as {@link requireNativeModule} —
+ * an unretained HybridObject is destroyed while its promise is still pending, and
+ * Nitro then rejects with "Timeouted: Promise<...> was destroyed!".
+ *
+ * Callers must check the platform first: this object only exists on Android, so
+ * constructing it elsewhere would throw. `requestAgeSignalsAccess` in ./index
+ * short-circuits before reaching here.
+ */
+export function requireNativeAccessModule(): AgeSignalsAccessSpec {
+  nativeAccessModule ??= NitroModules.createHybridObject<AgeSignalsAccessSpec>('AgeSignalsAccess');
+
+  return nativeAccessModule;
 }
