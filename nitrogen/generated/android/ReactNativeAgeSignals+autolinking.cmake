@@ -34,9 +34,11 @@ target_sources(
   ../nitrogen/generated/android/ReactNativeAgeSignalsOnLoad.cpp
   # Shared Nitrogen C++ sources
   ../nitrogen/generated/shared/c++/HybridAgeSignalsSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridAgeSignalsAccessSpec.cpp
   ../nitrogen/generated/shared/c++/HybridAgeSignalsTestingSpec.cpp
   # Android-specific Nitrogen C++ sources
   ../nitrogen/generated/android/c++/JHybridAgeSignalsSpec.cpp
+  ../nitrogen/generated/android/c++/JHybridAgeSignalsAccessSpec.cpp
   ../nitrogen/generated/android/c++/JHybridAgeSignalsTestingSpec.cpp
 )
 

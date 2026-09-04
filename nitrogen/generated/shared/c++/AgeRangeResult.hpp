@@ -26,6 +26,7 @@
 
 
 #include <string>
+#include <optional>
 
 namespace margelo::nitro::agesignals {
 
@@ -36,10 +37,11 @@ namespace margelo::nitro::agesignals {
   public:
     std::string ageRange     SWIFT_PRIVATE;
     std::string source     SWIFT_PRIVATE;
+    std::optional<std::string> accessStatus     SWIFT_PRIVATE;
 
   public:
     AgeRangeResult() = default;
-    explicit AgeRangeResult(std::string ageRange, std::string source): ageRange(ageRange), source(source) {}
+    explicit AgeRangeResult(std::string ageRange, std::string source, std::optional<std::string> accessStatus): ageRange(ageRange), source(source), accessStatus(accessStatus) {}
   };
 
 } // namespace margelo::nitro::agesignals
@@ -53,13 +55,15 @@ namespace margelo::nitro {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::agesignals::AgeRangeResult(
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, "ageRange")),
-        JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, "source"))
+        JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, "source")),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, "accessStatus"))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::agesignals::AgeRangeResult& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "ageRange", JSIConverter<std::string>::toJSI(runtime, arg.ageRange));
       obj.setProperty(runtime, "source", JSIConverter<std::string>::toJSI(runtime, arg.source));
+      obj.setProperty(runtime, "accessStatus", JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.accessStatus));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -72,6 +76,7 @@ namespace margelo::nitro {
       }
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, "ageRange"))) return false;
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, "source"))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, "accessStatus"))) return false;
       return true;
     }
   };

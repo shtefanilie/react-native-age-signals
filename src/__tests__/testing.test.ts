@@ -71,6 +71,65 @@ describe('on Android', () => {
 
     expect(createHybridObject).not.toHaveBeenCalled();
   });
+
+  it('forwards an access status to the native testing module', () => {
+    const { testing, createHybridObject } = loadTestingModule('android');
+
+    testing.setFakeAccessStatus(testing.AgeSignalsStatus.SHARED);
+
+    expect(createHybridObject.mock.results[0].value.setFakeAccessStatus).toHaveBeenCalledWith(1);
+  });
+
+  it('forwards each access status value Play defines', () => {
+    const { testing, createHybridObject } = loadTestingModule('android');
+    const native = createHybridObject.mock.results[0]?.value;
+
+    testing.setFakeAccessStatus(testing.AgeSignalsStatus.NOT_SHARED);
+    testing.setFakeAccessStatus(testing.AgeSignalsStatus.VERIFICATION_REQUIRED);
+    testing.setFakeAccessStatus(testing.AgeSignalsStatus.UNSPECIFIED);
+
+    const forwarded = (
+      native ?? createHybridObject.mock.results[0].value
+    ).setFakeAccessStatus.mock.calls.flat();
+    expect(forwarded).toEqual([2, 3, 0]);
+  });
+
+  it('forwards an access error code to the native testing module', () => {
+    const { testing, createHybridObject } = loadTestingModule('android');
+
+    testing.setFakeAccessError(testing.AgeSignalsErrorCode.NETWORK_ERROR);
+
+    expect(createHybridObject.mock.results[0].value.setFakeAccessError).toHaveBeenCalledWith(-3);
+  });
+
+  it('keeps the read and access fakes on separate native entry points', () => {
+    const { testing, createHybridObject } = loadTestingModule('android');
+    const native = createHybridObject.mock.results[0]?.value;
+
+    testing.setFakeAccessStatus(testing.AgeSignalsStatus.SHARED);
+    testing.setFakeResult({ ageLower: 13, ageUpper: 17 });
+
+    const resolved = native ?? createHybridObject.mock.results[0].value;
+    // Staging one must not go through the other's setter — Play needs both to
+    // reach a bounds-bearing result, so they cannot share a slot.
+    expect(resolved.setFakeAccessStatus).toHaveBeenCalledWith(1);
+    expect(resolved.setFakeResult).toHaveBeenCalledWith(13, 17);
+  });
+});
+
+describe('AgeSignalsStatus', () => {
+  it('matches the values Play defines', () => {
+    const { testing } = loadTestingModule('android');
+
+    // Read from the 0.0.4 AAR, not guessed: these cross the JSI boundary as
+    // plain ints, so a wrong value silently mis-stages a scenario.
+    expect(testing.AgeSignalsStatus).toEqual({
+      UNSPECIFIED: 0,
+      SHARED: 1,
+      NOT_SHARED: 2,
+      VERIFICATION_REQUIRED: 3,
+    });
+  });
 });
 
 describe('on iOS', () => {
@@ -86,5 +145,7 @@ describe('on iOS', () => {
 
     expect(() => testing.setFakeError(-1)).toThrow(/only available on Android/);
     expect(() => testing.clearFake()).toThrow(/only available on Android/);
+    expect(() => testing.setFakeAccessStatus(1)).toThrow(/only available on Android/);
+    expect(() => testing.setFakeAccessError(-3)).toThrow(/only available on Android/);
   });
 });

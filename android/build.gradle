@@ -15,7 +15,7 @@ def reactNativeArchitectures() {
 }
 
 group = 'com.margelo.nitro.agesignals'
-version = '0.4.0'
+version = '0.5.0'
 
 android {
   namespace "com.margelo.nitro.agesignals"
@@ -24,7 +24,7 @@ android {
   defaultConfig {
     minSdk 24
     versionCode 1
-    versionName "0.4.0"
+    versionName "0.5.0"
 
     externalNativeBuild {
       cmake {
@@ -63,6 +63,6 @@ dependencies {
   // own declaration; a hard-pinned version here would fight RN's substitution.
   implementation 'com.facebook.react:react-native:+'
   implementation project(':react-native-nitro-modules')
-  implementation 'com.google.android.play:age-signals:0.0.3'
+  implementation 'com.google.android.play:age-signals:0.0.4'
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 }

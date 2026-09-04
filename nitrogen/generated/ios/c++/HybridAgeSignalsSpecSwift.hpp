@@ -18,6 +18,7 @@ namespace margelo::nitro::agesignals { struct AgeRangeResult; }
 #include "AgeRangeResult.hpp"
 #include <NitroModules/Promise.hpp>
 #include <string>
+#include <optional>
 
 #include "ReactNativeAgeSignals-Swift-Cxx-Umbrella.hpp"
 
@@ -63,8 +64,8 @@ namespace margelo::nitro::agesignals {
 
   public:
     // Methods
-    inline std::shared_ptr<Promise<AgeRangeResult>> getAgeRange() override {
-      auto __result = _swiftPart.getAgeRange();
+    inline std::shared_ptr<Promise<AgeRangeResult>> getAgeRange(std::optional<bool> requestAccess) override {
+      auto __result = _swiftPart.getAgeRange(requestAccess);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.5.0 — 2026-09-01
+
+Moves to Play Age Signals `0.0.4`, which requires a consent step before it will report an age range. Existing code keeps working unchanged; opting into the consent step is one flag.
+
+### Why this release exists
+
+Google's `0.0.4` release notes make the two-call flow mandatory: `requestAgeSignalsAccess()` establishes whether the user shares their age range, and `checkAgeSignals()` reads it. Without the first call, the second reports no bounds at all for anyone who has not already opted in.
+
+Nothing about that is a compile error, which is what makes it worth a release note. A bare dependency bump builds clean and passes its tests, then quietly returns `{ ageRange: 'unknown', source: 'google' }` — a confident-looking answer that actually means consent was never requested. Verified against the shipped bytecode rather than inferred: `AgeSignalsResult` parses each field through a helper that returns null for an absent bundle key instead of throwing.
+
+Staying on `0.0.3` was the worse option. `AgeSignalsErrorCode.SDK_VERSION_OUTDATED` exists, so Play can refuse a client it considers too old, and this library maps that code as terminal — which the README tells you is safe to cache. A server-side refusal would therefore have become a permanent loss of signal for affected installs.
+
+### Added
+
+- **`requestAgeSignalsAccess(): Promise<AgeAccessStatus>`** — requests age sharing access from Play. **Android only**, resolving `'unavailable'` elsewhere rather than throwing, so no `Platform.OS` guard is needed. Returns `shared`, `notShared`, `verificationRequired`, `unavailable` or `error`. Worth calling on its own when the status drives UI: `verificationRequired` means the user must visit the Play Store, which a read alone cannot tell you.
+- **`getAgeRange({ requestAccess: true })`** — requests access, then reads, in one call. A non-`shared` outcome short-circuits the read and reports the access status instead of an unexplained `unknown`.
+- **`accessStatus` on `AgeSignalResult`** — optional, Android only, set only when access was requested. A plain read never asks, so it stays undefined.
+- `AgeAccessStatus` and `GetAgeRangeOptions` are exported.
+- `react-native-age-signals/testing` gains `setFakeAccessStatus(status)`, `setFakeAccessError(code)` and the `AgeSignalsStatus` constants, so the consent half is drivable from an emulator. Staged independently of the read fakes — Play needs both to reach a bounds-bearing result — and mutually exclusive within each pair.
+
+### Changed
+
+- `com.google.android.play:age-signals` `0.0.3` → `0.0.4`. Play's consent activity and its theme merge in from the AAR automatically; no manifest work, and no AppCompat dependency.
+- **`getAgeRange()` with no arguments behaves exactly as before.** The consent step is opt-in precisely because it can present a system prompt, and upgrading a library should not introduce one into a call site that never asked for it. The cost is that an Android user who has not already opted into sharing now reads as `unknown` until you pass the flag — if you want the signal, pass it.
+- `source: 'declined'` now also covers Android's `NOT_SHARED`. It previously appeared only on iOS. **Revisit this if you cache results:** Play does not distinguish a declined prompt from a "never share" setting from a suppressed prompt, and the user can change that setting at any time, so an Android `declined` can go stale in a way an iOS one cannot.
+- `verificationRequired` reports `source: 'error'`. Nothing failed — the user simply has not verified their age yet — but the state is resolvable in the Play Store, so it has to stay retryable. `source` records whether retrying is worthwhile; the precise reason is in `accessStatus`. Reporting it as `unavailable` would let a caller cache away a state the user can fix.
+- `AgeSignalSource` is **unchanged**. Adding a member would break consumers treating the union as closed — an exhaustive `switch`, or a `Record<AgeSignalSource, T>` — so the new detail arrives as the optional `accessStatus` instead, which widens the result type rather than breaking it.
+- The terminal-versus-retryable rule for Play error codes is now shared between the read and the consent request, so the two cannot classify the same code differently.
+- README corrected: the Android minimum is API 24, matching `android/build.gradle`, not API 23.
+
+### Notes
+
+- Requesting access needs a foreground Activity. Called from the background, it reports `error` — retryable, since a later call from a screen will succeed.
+- Play throttles its own prompt: after a few dismissals it stops showing it and returns `notShared`. Repeated calls cannot nag a user.
+- `significantChangeStatus`, `significantChangeApprovalDate`, `installId` and `ageRangeSource` are exposed by `0.0.4` but deliberately not surfaced here.
+- Glue is still generated with `nitrogen` **0.31.10**, unchanged. Consumers must re-run `pod install` (iOS) / sync gradle (Android) after upgrading, as the generated glue changed.
+
 ## 0.4.0 — 2026-08-17
 
 The Android side of this library had never compiled, so nothing it did on Android had ever run. This release makes it work, and adds a way to test it.

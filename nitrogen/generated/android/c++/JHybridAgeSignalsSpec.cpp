@@ -15,6 +15,7 @@ namespace margelo::nitro::agesignals { struct AgeRangeResult; }
 #include <NitroModules/JPromise.hpp>
 #include "JAgeRangeResult.hpp"
 #include <string>
+#include <optional>
 
 namespace margelo::nitro::agesignals {
 
@@ -48,9 +49,9 @@ namespace margelo::nitro::agesignals {
   
 
   // Methods
-  std::shared_ptr<Promise<AgeRangeResult>> JHybridAgeSignalsSpec::getAgeRange() {
-    static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("getAgeRange");
-    auto __result = method(_javaPart);
+  std::shared_ptr<Promise<AgeRangeResult>> JHybridAgeSignalsSpec::getAgeRange(std::optional<bool> requestAccess) {
+    static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JBoolean> /* requestAccess */)>("getAgeRange");
+    auto __result = method(_javaPart, requestAccess.has_value() ? jni::JBoolean::valueOf(requestAccess.value()) : nullptr);
     return [&]() {
       auto __promise = Promise<AgeRangeResult>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {

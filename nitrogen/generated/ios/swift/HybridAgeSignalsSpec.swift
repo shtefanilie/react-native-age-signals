@@ -14,7 +14,7 @@ public protocol HybridAgeSignalsSpec_protocol: HybridObject {
   
 
   // Methods
-  func getAgeRange() throws -> Promise<AgeRangeResult>
+  func getAgeRange(requestAccess: Bool?) throws -> Promise<AgeRangeResult>
   func isSupported() throws -> Promise<Bool>
 }
 

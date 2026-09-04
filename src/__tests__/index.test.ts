@@ -3,21 +3,31 @@
  * memoizes the native object. The mock's `createHybridObject` is re-created by
  * the same reset, so arming it here applies to exactly one test.
  */
-function loadModule() {
+function loadModule(os: 'ios' | 'android' = 'android') {
+  require('react-native').Platform.OS = os;
+
   const { NitroModules } = require('react-native-nitro-modules');
 
   const nativeModule = {
     getAgeRange: jest.fn(),
     isSupported: jest.fn(),
   };
+  const accessModule = {
+    requestAgeSignalsAccess: jest.fn(),
+  };
 
-  (NitroModules.createHybridObject as jest.Mock).mockReturnValue(nativeModule);
+  // Both HybridObjects are reached through the same factory, so the mock has to
+  // answer per name rather than returning one shared object.
+  (NitroModules.createHybridObject as jest.Mock).mockImplementation((name: string) =>
+    name === 'AgeSignalsAccess' ? accessModule : nativeModule
+  );
 
   const index = require('../index') as typeof import('../index');
 
   return {
     index,
     nativeModule,
+    accessModule,
     createHybridObject: NitroModules.createHybridObject as jest.Mock,
   };
 }
@@ -80,6 +90,100 @@ describe('getAgeRange', () => {
     nativeModule.getAgeRange.mockRejectedValue(new Error('native error'));
 
     await expect(index.getAgeRange()).rejects.toThrow('native error');
+  });
+
+  it('does not request access by default', async () => {
+    const { index, nativeModule } = loadModule();
+    nativeModule.getAgeRange.mockResolvedValue({ ageRange: 'adult', source: 'google' });
+
+    await index.getAgeRange();
+
+    // The whole point of the default: upgrading must not introduce a system
+    // prompt into a call site that never had one.
+    expect(nativeModule.getAgeRange).toHaveBeenCalledWith(undefined);
+  });
+
+  it('forwards an explicit access request', async () => {
+    const { index, nativeModule } = loadModule();
+    nativeModule.getAgeRange.mockResolvedValue({
+      ageRange: 'teen',
+      source: 'google',
+      accessStatus: 'shared',
+    });
+
+    await index.getAgeRange({ requestAccess: true });
+
+    expect(nativeModule.getAgeRange).toHaveBeenCalledWith(true);
+  });
+
+  it('forwards requestAccess: false without inventing a default', async () => {
+    const { index, nativeModule } = loadModule();
+    nativeModule.getAgeRange.mockResolvedValue({ ageRange: 'unknown', source: 'google' });
+
+    await index.getAgeRange({ requestAccess: false });
+
+    expect(nativeModule.getAgeRange).toHaveBeenCalledWith(false);
+  });
+
+  it('passes accessStatus through untouched', async () => {
+    const { index, nativeModule } = loadModule();
+    nativeModule.getAgeRange.mockResolvedValue({
+      ageRange: 'unknown',
+      source: 'error',
+      accessStatus: 'verificationRequired',
+    });
+
+    const result = await index.getAgeRange({ requestAccess: true });
+
+    expect(result.accessStatus).toBe('verificationRequired');
+    expect(result.source).toBe('error');
+  });
+});
+
+describe('requestAgeSignalsAccess', () => {
+  it('returns the status the native side reports', async () => {
+    const { index, accessModule } = loadModule('android');
+    accessModule.requestAgeSignalsAccess.mockResolvedValue('shared');
+
+    expect(await index.requestAgeSignalsAccess()).toBe('shared');
+  });
+
+  it.each(['notShared', 'verificationRequired', 'unavailable', 'error'] as const)(
+    'passes through the %s status',
+    async (status) => {
+      const { index, accessModule } = loadModule('android');
+      accessModule.requestAgeSignalsAccess.mockResolvedValue(status);
+
+      expect(await index.requestAgeSignalsAccess()).toBe(status);
+    }
+  );
+
+  it('resolves unavailable on iOS without touching native', async () => {
+    const { index, createHybridObject } = loadModule('ios');
+
+    // Apple has no separate consent step, so this resolves rather than throwing
+    // — a caller should not need a Platform.OS guard around it.
+    expect(await index.requestAgeSignalsAccess()).toBe('unavailable');
+    expect(createHybridObject).not.toHaveBeenCalled();
+  });
+
+  it('creates the access object once across multiple calls', async () => {
+    const { index, accessModule, createHybridObject } = loadModule('android');
+    accessModule.requestAgeSignalsAccess.mockResolvedValue('shared');
+
+    await index.requestAgeSignalsAccess();
+    await index.requestAgeSignalsAccess();
+
+    expect(
+      createHybridObject.mock.calls.filter(([name]) => name === 'AgeSignalsAccess')
+    ).toHaveLength(1);
+  });
+
+  it('propagates rejection', async () => {
+    const { index, accessModule } = loadModule('android');
+    accessModule.requestAgeSignalsAccess.mockRejectedValue(new Error('native error'));
+
+    await expect(index.requestAgeSignalsAccess()).rejects.toThrow('native error');
   });
 });
 

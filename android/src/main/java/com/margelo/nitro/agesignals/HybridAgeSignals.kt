@@ -1,14 +1,13 @@
 package com.margelo.nitro.agesignals
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.util.Log
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
 import com.google.android.play.agesignals.AgeSignalsException
+import com.google.android.play.agesignals.AgeSignalsManager
 import com.google.android.play.agesignals.AgeSignalsManagerFactory
 import com.google.android.play.agesignals.AgeSignalsRequest
-import com.google.android.play.agesignals.model.AgeSignalsErrorCode
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.Promise
 import kotlin.coroutines.resume
@@ -43,30 +42,101 @@ class HybridAgeSignals : HybridAgeSignalsSpec() {
     }
   }
 
-  override fun getAgeRange(): Promise<AgeRangeResult> {
+  /**
+   * Reads the user's age range from Play.
+   *
+   * Play's 0.0.4 SDK splits this into two calls: age sharing access has to be
+   * granted before `checkAgeSignals` reports any bounds at all. When access was
+   * never requested — or was requested and refused — the response arrives with
+   * `ageLower` and `ageUpper` absent, which this maps to `unknown`.
+   *
+   * `requestAccess` is therefore what decides whether this call can produce a
+   * real answer for a user who has not already opted in. It defaults to false so
+   * that upgrading this library cannot introduce a system prompt into a call site
+   * that never had one; a caller who wants the signal opts in explicitly.
+   */
+  override fun getAgeRange(requestAccess: Boolean?): Promise<AgeRangeResult> {
     return Promise.async {
-      val context: Context = NitroModules.applicationContext
-        ?: return@async AgeRangeResult(ageRange = "unknown", source = "unavailable")
+      // Deliberately the ReactApplicationContext rather than a plain Context:
+      // requesting access needs the foreground Activity, and this is the only
+      // handle nitro gives us onto it.
+      val reactContext = NitroModules.applicationContext
+        ?: return@async unavailable()
 
       val manager = FakeAgeSignalsStore.manager ?: try {
-        AgeSignalsManagerFactory.create(context)
+        AgeSignalsManagerFactory.create(reactContext)
       } catch (e: Exception) {
-        Log.w(TAG, "Could not create the Play age signals client. Reporting unavailable.", e)
-        return@async AgeRangeResult(ageRange = "unknown", source = "unavailable")
+        Log.w(LOG_TAG, "Could not create the Play age signals client. Reporting unavailable.", e)
+        return@async unavailable()
       }
 
-      val request = AgeSignalsRequest.builder().build()
+      var accessStatus: String? = null
 
-      suspendCancellableCoroutine { cont ->
-        manager.checkAgeSignals(request)
-          .addOnSuccessListener { result ->
-            val ageRange = toAgeRange(result.ageLower(), result.ageUpper())
-            cont.resume(AgeRangeResult(ageRange = ageRange, source = "google"))
-          }
-          .addOnFailureListener { throwable ->
-            cont.resume(AgeRangeResult(ageRange = "unknown", source = sourceForFailure(throwable)))
-          }
+      if (requestAccess == true) {
+        accessStatus = performAccessRequest(manager, reactContext.currentActivity)
+
+        if (accessStatus != AccessStatus.SHARED) {
+          // Play will report no bounds, so reading would only produce `unknown`
+          // with no indication of why. Report the access outcome instead.
+          return@async AgeRangeResult(
+            ageRange = "unknown",
+            source = sourceForAccessStatus(accessStatus),
+            accessStatus = accessStatus
+          )
+        }
       }
+
+      readAgeRange(manager, accessStatus)
+    }
+  }
+
+  private suspend fun readAgeRange(
+    manager: AgeSignalsManager,
+    accessStatus: String?
+  ): AgeRangeResult {
+    val request = AgeSignalsRequest.builder().build()
+
+    return suspendCancellableCoroutine { cont ->
+      manager.checkAgeSignals(request)
+        .addOnSuccessListener { result ->
+          cont.resume(
+            AgeRangeResult(
+              ageRange = toAgeRange(result.ageLower(), result.ageUpper()),
+              source = "google",
+              accessStatus = accessStatus
+            )
+          )
+        }
+        .addOnFailureListener { throwable ->
+          cont.resume(
+            AgeRangeResult(
+              ageRange = "unknown",
+              source = sourceForFailure(throwable),
+              accessStatus = accessStatus
+            )
+          )
+        }
+    }
+  }
+
+  /**
+   * Maps an access outcome that stopped the read onto `source`.
+   *
+   * `notShared` becomes `declined`, which already meant exactly this on iOS.
+   * Note that Play cannot distinguish "dismissed the prompt" from "Never Share"
+   * from "prompt suppressed", so on Android a `declined` may go stale if the
+   * user later changes their Play setting — see the README before caching it.
+   *
+   * `verificationRequired` becomes `error` rather than `unavailable`, because
+   * the user can resolve it in the Play Store and a caller must not cache it
+   * away. `source` records whether retrying is worthwhile, and here it is; the
+   * precise reason travels in `accessStatus`.
+   */
+  private fun sourceForAccessStatus(accessStatus: String): String {
+    return when (accessStatus) {
+      AccessStatus.NOT_SHARED -> "declined"
+      AccessStatus.UNAVAILABLE -> "unavailable"
+      else -> "error"
     }
   }
 
@@ -74,38 +144,24 @@ class HybridAgeSignals : HybridAgeSignalsSpec() {
    * Maps a `checkAgeSignals` failure onto `source`, which is what tells a caller
    * whether retrying is worthwhile.
    *
-   * The distinction matters because a consumer typically caches the outcome, and
-   * caching a transient failure makes it permanent. `unavailable` means "do not
-   * ask this device again"; `error` means "ask again next launch".
-   *
-   * Only codes that no user action can resolve are treated as terminal. The
-   * "outdated" and "not found" Play codes are deliberately transient: a user who
-   * updates the Play Store or Play Services would then get a real signal, and
-   * caching `unavailable` would hide that from them until they reinstalled.
-   *
-   * The same rule is applied to Apple's error cases in ios/HybridAgeSignals.swift.
-   * Change both together.
+   * The terminal-versus-retryable rule itself lives in [isTerminalPlayError], so
+   * that the read path and the access request cannot classify the same code
+   * differently.
    */
   private fun sourceForFailure(throwable: Throwable): String {
     val errorCode = (throwable as? AgeSignalsException)?.errorCode
 
     if (errorCode == null) {
-      Log.w(TAG, "checkAgeSignals failed without a Play error code. Reporting a retryable error.", throwable)
+      Log.w(LOG_TAG, "checkAgeSignals failed without a Play error code. Reporting a retryable error.", throwable)
       return "error"
     }
 
-    return when (errorCode) {
-      AgeSignalsErrorCode.API_NOT_AVAILABLE,
-      AgeSignalsErrorCode.PLAY_STORE_NOT_FOUND,
-      AgeSignalsErrorCode.APP_NOT_OWNED,
-      AgeSignalsErrorCode.SDK_VERSION_OUTDATED -> {
-        Log.w(TAG, "checkAgeSignals failed with terminal code $errorCode. Reporting unavailable.", throwable)
-        "unavailable"
-      }
-      else -> {
-        Log.w(TAG, "checkAgeSignals failed with code $errorCode. Reporting a retryable error.", throwable)
-        "error"
-      }
+    return if (isTerminalPlayError(errorCode)) {
+      Log.w(LOG_TAG, "checkAgeSignals failed with terminal code $errorCode. Reporting unavailable.", throwable)
+      "unavailable"
+    } else {
+      Log.w(LOG_TAG, "checkAgeSignals failed with code $errorCode. Reporting a retryable error.", throwable)
+      "error"
     }
   }
 
@@ -117,15 +173,18 @@ class HybridAgeSignals : HybridAgeSignalsSpec() {
    * together.
    *
    * Deliberately derived from the age bounds alone rather than from
-   * AgeSignalsResult.userStatus(). Comparing the 0.0.3 and 0.0.4 AARs confirms
-   * `ageLower()` / `ageUpper()` are unchanged while `userStatus()` was removed in
-   * 0.0.4 (alongside a new `ageRangeSource()`), so branching on it would fail to
-   * compile against the newer SDK. The bounds are the portable choice.
+   * `AgeSignalsResult.userStatus()`. Google's 0.0.4 release notes deprecate
+   * `userStatus` outright, replacing it with `ageRangeSource` and
+   * `significantChangeStatus`, while `ageLower()` / `ageUpper()` are unchanged.
+   * The bounds are the version-portable choice.
    *
-   * The IPC bundle keys behind those accessors ("age.range.lower" /
-   * "age.range.upper", versus "user.status" giving way to "age.range.source") are
-   * inferred from the same class comparison rather than from Google's changelog,
-   * which was not reachable when this was written.
+   * The IPC bundle keys behind those accessors corroborate this: `0.0.3` carries
+   * `age.range.lower`, `age.range.upper` and `user.status`, while `0.0.4` carries
+   * the two range keys plus `age.range.source` and no `user.status` at all.
+   *
+   * A null upper bound is normal, not an error — Play reports it for the highest
+   * band, so an 18+ user arrives as lower 18 with no upper. Both bounds are null
+   * when age sharing was never granted.
    */
   private fun toAgeRange(lower: Int?, upper: Int?): String {
     return when {
@@ -137,7 +196,6 @@ class HybridAgeSignals : HybridAgeSignalsSpec() {
     }
   }
 
-  private companion object {
-    const val TAG = "AgeSignals"
-  }
+  private fun unavailable() =
+    AgeRangeResult(ageRange = "unknown", source = "unavailable", accessStatus = null)
 }

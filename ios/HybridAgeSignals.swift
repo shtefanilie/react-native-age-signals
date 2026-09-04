@@ -27,14 +27,21 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
     }
   }
 
-  func getAgeRange() throws -> Promise<AgeRangeResult> {
+  /// Reads the user's declared age range, presenting Apple's sharing sheet.
+  ///
+  /// `requestAccess` is accepted and ignored. It exists for Android, where Play's
+  /// 0.0.4 SDK requires a separate consent call before it will report any age
+  /// bounds. Apple has no equivalent step — `requestAgeRange` presents its sheet
+  /// and returns the range in one call — so there is nothing here to gate, and
+  /// `accessStatus` stays nil on this platform.
+  func getAgeRange(requestAccess: Bool?) throws -> Promise<AgeRangeResult> {
     return Promise.async {
       #if canImport(DeclaredAgeRange)
       if #available(iOS 26.0, *) {
         return await self.fetchAgeRange()
       }
       #endif
-      return AgeRangeResult(ageRange: "unknown", source: "unavailable")
+      return AgeRangeResult(ageRange: "unknown", source: "unavailable", accessStatus: nil)
     }
   }
 
@@ -46,7 +53,7 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
         Self.logger.warning(
           "Found no root view controller to present the age range sheet from. Reporting unavailable."
         )
-        return AgeRangeResult(ageRange: "unknown", source: "unavailable")
+        return AgeRangeResult(ageRange: "unknown", source: "unavailable", accessStatus: nil)
       }
 
       let response = try await AgeRangeService.shared.requestAgeRange(ageGates: 13, 18, in: viewController)
@@ -55,13 +62,14 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
       case .sharing(let range):
         return AgeRangeResult(
           ageRange: Self.toAgeRange(lower: range.lowerBound, upper: range.upperBound),
-          source: "apple"
+          source: "apple",
+          accessStatus: nil
         )
       case .declinedSharing:
-        return AgeRangeResult(ageRange: "unknown", source: "declined")
+        return AgeRangeResult(ageRange: "unknown", source: "declined", accessStatus: nil)
       @unknown default:
         Self.logger.warning("AgeRangeService returned an unrecognised response. Reporting unavailable.")
-        return AgeRangeResult(ageRange: "unknown", source: "unavailable")
+        return AgeRangeResult(ageRange: "unknown", source: "unavailable", accessStatus: nil)
       }
     } catch let error as AgeRangeService.Error {
       return Self.result(for: error)
@@ -71,7 +79,7 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
       Self.logger.error(
         "requestAgeRange failed with an unrecognised error: \(String(describing: error), privacy: .public). Reporting a retryable error."
       )
-      return AgeRangeResult(ageRange: "unknown", source: "error")
+      return AgeRangeResult(ageRange: "unknown", source: "error", accessStatus: nil)
     }
   }
 
@@ -92,7 +100,7 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
       // The device or the signed-in Apple Account cannot supply a declared age
       // range. Nothing the app does will change that within this install.
       logger.warning("AgeRangeService reported notAvailable. Reporting unavailable.")
-      return AgeRangeResult(ageRange: "unknown", source: "unavailable")
+      return AgeRangeResult(ageRange: "unknown", source: "unavailable", accessStatus: nil)
     case .invalidRequest:
       // Our own call was malformed, e.g. the age gates we passed. Retrying will
       // not fix it, but reporting it as unavailable would let a caller cache the
@@ -100,12 +108,12 @@ class HybridAgeSignals: HybridAgeSignalsSpec {
       logger.error(
         "AgeRangeService rejected the request as invalid. This is a bug in the age gates this module requests."
       )
-      return AgeRangeResult(ageRange: "unknown", source: "error")
+      return AgeRangeResult(ageRange: "unknown", source: "error", accessStatus: nil)
     @unknown default:
       logger.error(
         "AgeRangeService reported an error case added after this module was written: \(String(describing: error), privacy: .public). Reporting a retryable error."
       )
-      return AgeRangeResult(ageRange: "unknown", source: "error")
+      return AgeRangeResult(ageRange: "unknown", source: "error", accessStatus: nil)
     }
   }
   #endif

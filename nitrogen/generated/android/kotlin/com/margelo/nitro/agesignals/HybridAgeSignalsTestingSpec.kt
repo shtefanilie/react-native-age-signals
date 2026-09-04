@@ -55,6 +55,14 @@ abstract class HybridAgeSignalsTestingSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
+  abstract fun setFakeAccessStatus(status: Double): Unit
+  
+  @DoNotStrip
+  @Keep
+  abstract fun setFakeAccessError(errorCode: Double): Unit
+  
+  @DoNotStrip
+  @Keep
   abstract fun clearFake(): Unit
 
   private external fun initHybrid(): HybridData
