@@ -14,10 +14,6 @@ Built on [Nitro Modules](https://nitro.margelo.com) for near-zero JSI overhead. 
 
 **What it is not.** It does not verify anyone's age — it reports what the store already knows. It does not gate your content; it hands you a bracket and you decide. It stores nothing, so caching is yours to choose. And it is not legal advice about which regimes apply to you.
 
-## Demo
-
-![demo](https://raw.githubusercontent.com/shtefanilie/react-native-age-signals/main/assets/demo.gif)
-
 ## Install
 
 ```sh
