@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.1 — 2026-09-09
+
+Documentation release. No runtime or public API behavior changed from `0.5.0`.
+
+### Added
+
+- Added a standalone [`docs/api.md`](docs/api.md) API reference covering results, caching guidance, Android consent, and testing helpers.
+- Added troubleshooting guidance for native registration, Expo Go, Nitro version mismatches, Android ABI configuration, missing iOS entitlements, and misleading `unknown` results.
+
+### Changed
+
+- Reworked the README with a shorter installation and quickstart flow, platform requirements, iOS Declared Age Range entitlement setup, and clearer Android consent guidance.
+- Documented the `react-native-nitro-modules` `^0.31.10` compatibility requirement and the need to rebuild after native changes.
+
 ## 0.5.0 — 2026-09-01
 
 Moves to Play Age Signals `0.0.4`, which requires a consent step before it will report an age range. Existing code keeps working unchanged; opting into the consent step is one flag.
